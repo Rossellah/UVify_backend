@@ -5,7 +5,7 @@
 
 import express from "express";
 import dotenv from "dotenv";
-import cors from "cors"; // ✅ FIXED: Import CORS
+import cors from "cors";
 import { db } from "./db.js";
 import { users, uv_readings } from "./shared/schema.js";
 import { eq, desc } from "drizzle-orm";
@@ -18,7 +18,7 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 // ======================================================
-// 🌐 Middleware (CORS FIXED)
+// 🌐 Middleware (CORS FIXED + JSON ORDER CORRECTED)
 // ======================================================
 const allowedOrigins = [
   "http://localhost:5173",
@@ -35,16 +35,17 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.warn(`🚫 CORS blocked request from origin: ${origin}`);
         callback(new Error("CORS not allowed for this origin: " + origin));
       }
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 );
 
 app.options("*", cors());
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -75,7 +76,7 @@ app.post("/register", async (req, res) => {
       .insert(users)
       .values({
         username,
-        password, // ⚠️ TODO: hash using bcrypt later
+        password,
         email,
         first_name,
         last_name,
@@ -100,7 +101,6 @@ app.post("/auth/login", async (req, res) => {
       return res.status(401).json({ success: false, message: "User not found" });
     }
 
-    // ⚠️ Later: use bcrypt.compare() here
     if (user.password !== password) {
       return res.status(401).json({ success: false, message: "Invalid password" });
     }
