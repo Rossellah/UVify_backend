@@ -23,11 +23,8 @@ const PORT = process.env.PORT || 4000;
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",                // Local Vite frontend
-      "https://v0-v0uvifyfrontendmain4.vercel.app",
-      "https://uv-ifyfrontend.vercel.app",
-      "https://v0-v0uvifyfrontendmain.vercel.app",
-      "https://b5479d6e-0dba-409a-b84d-f50f8210e9c6-00-qg71uy0n0wv4.pike.replit.dev" // Vercel deployed frontend
+      "http://localhost:5173",                        // Local dev
+      "https://v0-v0uvifyfrontendmain4.vercel.app",  // Your new Vercel frontend
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -36,7 +33,6 @@ app.use(
 );
 
 app.options("*", cors()); // handle preflight OPTIONS requests
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -53,7 +49,6 @@ let history = [];
 app.get("/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
-
 
 // 2️⃣ Register new user
 app.post("/register", async (req, res) => {
@@ -81,9 +76,7 @@ app.post("/register", async (req, res) => {
     res.json({ success: true, user: result[0] });
   } catch (error) {
     console.error("❌ Error registering user:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to register user" });
+    res.status(500).json({ success: false, message: "Failed to register user" });
   }
 });
 
@@ -137,7 +130,7 @@ app.post("/history/:userId", async (req, res) => {
   }
 });
 
-// 5️⃣ Fetch all readings for a user (from Neon DB)
+// 5️⃣ Fetch all readings for a user
 app.get("/history/:userId", async (req, res) => {
   const { userId } = req.params;
 
@@ -168,18 +161,11 @@ app.delete("/history/:userId", async (req, res) => {
   }
 });
 
-// ======================================================
-// 8️⃣ User Profile Routes
-// ======================================================
-
-// ✅ Get user profile by ID
+// 7️⃣ User Profile Routes
 app.get("/profile/:userId", async (req, res) => {
   const { userId } = req.params;
   try {
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.user_id, Number(userId)));
+    const [user] = await db.select().from(users).where(eq(users.user_id, Number(userId)));
 
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
@@ -192,16 +178,12 @@ app.get("/profile/:userId", async (req, res) => {
   }
 });
 
-// ✅ Update user profile by ID
 app.put("/profile/:userId", async (req, res) => {
   const { userId } = req.params;
   const { first_name, last_name, email, phone } = req.body;
 
   try {
-    const [existingUser] = await db
-      .select()
-      .from(users)
-      .where(eq(users.user_id, Number(userId)));
+    const [existingUser] = await db.select().from(users).where(eq(users.user_id, Number(userId)));
 
     if (!existingUser) {
       return res.status(404).json({ success: false, message: "User not found" });
@@ -209,12 +191,7 @@ app.put("/profile/:userId", async (req, res) => {
 
     const updated = await db
       .update(users)
-      .set({
-        first_name,
-        last_name,
-        email,
-        phone,
-      })
+      .set({ first_name, last_name, email, phone })
       .where(eq(users.user_id, Number(userId)))
       .returning();
 
@@ -225,12 +202,7 @@ app.put("/profile/:userId", async (req, res) => {
   }
 });
 
-
-// ======================================================
-// 🌐 Dashboard + ESP32 (In-Memory + DB Sync)
-// ======================================================
-
-// ESP32 sends readings (used by your existing sketch)
+// 8️⃣ Dashboard / ESP32 live data
 app.post("/receive-data", async (req, res) => {
   const { date, time, uvi, level } = req.body;
 
@@ -243,14 +215,7 @@ app.post("/receive-data", async (req, res) => {
   console.log("📡 Data received:", entry);
 
   try {
-    // Save to Neon DB (assuming single user: ID = 1)
-    await db.insert(uv_readings).values({
-      user_id: 1,
-      date,
-      time,
-      uvi: Number(uvi),
-      level,
-    });
+    await db.insert(uv_readings).values({ user_id: 1, date, time, uvi: Number(uvi), level });
     res.json({ success: true, message: "Data saved to DB", entry });
   } catch (error) {
     console.error("❌ DB save failed:", error);
@@ -258,35 +223,23 @@ app.post("/receive-data", async (req, res) => {
   }
 });
 
-// Return latest reading (for dashboard live view)
 app.get("/latest", (req, res) => {
-  if (history.length === 0) {
-    return res.json({ message: "No data yet" });
-  }
+  if (history.length === 0) return res.json({ message: "No data yet" });
   res.json(history[history.length - 1]);
 });
 
-// Return all readings from database
 app.get("/history", async (req, res) => {
   try {
-    // Optional: if you later pass userId as query param ?userId=1
     const { userId } = req.query;
 
     let query = db.select().from(uv_readings).orderBy(desc(uv_readings.created_at));
-
-    // If userId is provided, filter by user
-    if (userId) {
-      query = query.where(eq(uv_readings.user_id, Number(userId)));
-    }
+    if (userId) query = query.where(eq(uv_readings.user_id, Number(userId)));
 
     const results = await query;
     res.json(results);
   } catch (error) {
     console.error("❌ Error fetching UV history:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch UV history from database",
-    });
+    res.status(500).json({ success: false, message: "Failed to fetch UV history" });
   }
 });
 
