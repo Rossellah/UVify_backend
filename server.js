@@ -5,6 +5,7 @@
 
 import express from "express";
 import dotenv from "dotenv";
+import cors from "cors"; // ✅ FIXED: Import CORS
 import { db } from "./db.js";
 import { users, uv_readings } from "./shared/schema.js";
 import { eq, desc } from "drizzle-orm";
@@ -31,13 +32,6 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      const allowedOrigins = [
-        "http://localhost:5173",
-        "https://v0-v0uvifyfrontendmain4.vercel.app",
-        "https://v0-v0uvifyfrontendmain.vercel.app",
-        "https://v0-uv-ifyfrontend.vercel.app",
-        "https://uv-ifyfrontend.vercel.app",
-      ];
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -50,7 +44,6 @@ app.use(
 );
 
 app.options("*", cors());
-
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
