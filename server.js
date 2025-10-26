@@ -18,25 +18,24 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 // ======================================================
-// 🌐 Middleware (CORS FIXED + JSON ORDER CORRECTED)
+// 🌐 Middleware (FINAL CORS FIX)
 // ======================================================
 const allowedOrigins = [
   "http://localhost:5173",
   "https://v0-v0uvifyfrontendmain4.vercel.app", // ✅ current frontend
-  "https://v0-v0uvifyfrontendmain.vercel.app",  // ✅ old frontend
-  "https://v0-uv-ifyfrontend.vercel.app",
-  "https://uv-ifyfrontend.vercel.app",
-  "https://b5479d6e-0dba-409a-b84d-f50f8210e9c6-00-qg71uy0n0wv4.pike.replit.dev"
+  "https://v0-v0uvifyfrontendmain.vercel.app",  // old frontend
+  "https://uvify-backend-4sjy.onrender.com"     // backend itself
 ];
 
 app.use(
   cors({
-    origin: (origin, callback) => {
+    origin: function (origin, callback) {
+      console.log("🌐 Request from origin:", origin);
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        console.warn(`🚫 CORS blocked request from origin: ${origin}`);
-        callback(new Error("CORS not allowed for this origin: " + origin));
+        console.warn("🚫 Blocked by CORS:", origin);
+        callback(new Error("Not allowed by CORS"));
       }
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
