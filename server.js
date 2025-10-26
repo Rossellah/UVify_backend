@@ -28,21 +28,29 @@ const allowedOrigins = [
   "https://b5479d6e-0dba-409a-b84d-f50f8210e9c6-00-qg71uy0n0wv4.pike.replit.dev"
 ];
 
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  }
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        "http://localhost:5173",
+        "https://v0-v0uvifyfrontendmain4.vercel.app",
+        "https://v0-v0uvifyfrontendmain.vercel.app",
+        "https://v0-uv-ifyfrontend.vercel.app",
+        "https://uv-ifyfrontend.vercel.app",
+      ];
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS not allowed for this origin: " + origin));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
+app.options("*", cors());
 
-  next();
-});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
