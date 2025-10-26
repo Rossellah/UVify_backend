@@ -18,22 +18,28 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 // ======================================================
-// 🌐 Middleware (CORS FIXED + NEW FRONTEND ADDED)
+// 🌐 Middleware (CORS FIXED + AUTO VERCEL SUPPORT)
 // ======================================================
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://v0-v0uvifyfrontendmain4.vercel.app", // ✅ previous frontend
+  "https://v0-v0uvifyfrontendmain4.vercel.app",
   "https://v0-v0uvifyfrontendmain.vercel.app",
   "https://v0-uv-ifyfrontend.vercel.app",
   "https://uv-ifyfrontend.vercel.app",
   "https://b5479d6e-0dba-409a-b84d-f50f8210e9c6-00-qg71uy0n0wv4.pike.replit.dev",
-  "https://v0-uv-ifyfrontend-git-main-rossellah-s-projects.vercel.app" // ✅ NEW FRONTEND (Vercel)
+  "https://v0-uv-ifyfrontend-git-main-rossellah-s-projects.vercel.app",
+  "https://v0-uv-ifyfrontend-eight.vercel.app" // ✅ NEW FRONTEND
 ];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      // ✅ Allow localhost, allowedOrigins, and any *.vercel.app subdomain
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        /\.vercel\.app$/.test(origin)
+      ) {
         callback(null, true);
       } else {
         console.warn(`🚫 CORS blocked request from origin: ${origin}`);
