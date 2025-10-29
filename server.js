@@ -24,7 +24,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",                        // Local dev
-      "https://v0-v0uvifyfrontendmain4.vercel.app",  // Your new Vercel frontend
+      "https://v0-v0uvifyfrontendmain5.vercel.app",  // Your new Vercel frontend
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
